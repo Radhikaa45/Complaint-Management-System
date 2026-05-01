@@ -32,7 +32,7 @@ return (
 
 <Route path="/admin" element={<AdminDashboard />} />
 <Route path="/history" element={<ComplaintHistory />} />
-  <Route path="/performance" element={<Performance />} />
+  {/* <Route path="/performance" element={<Performance />} /> */}
 
 
 </Routes>

@@ -16,13 +16,12 @@ INTELLIGENT WORKPLACE 2.0
 
 <h1 className="text-5xl font-bold text-gray-800 leading-tight">
 
-Transforming Office <br/>
+Redefining Modern  <br/>
 
 <span className="text-blue-600">
-Management
+Office
 </span>
-
-with AI
+ Operations
 
 </h1>
 

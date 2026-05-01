@@ -5,7 +5,7 @@ interface Complaint {
   id: number;
   description: string;
   category: string;
-  priority: string; // make flexible (important)
+  priority: string;
   confidence: number;
   time: string;
 }
@@ -13,17 +13,14 @@ interface Complaint {
 export default function Performance() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  // 🔥 REAL-TIME FETCH (polling every 5 sec)
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/complaints");
         const data = await res.json();
-
-        console.log("LIVE DATA:", data); // 🔍 DEBUG
-
-        setComplaints([...data]); // force re-render
+        setComplaints(data);
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -32,129 +29,83 @@ export default function Performance() {
 
     fetchData();
     const interval = setInterval(fetchData, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ NORMALIZE PRIORITY (REAL FIX)
-  const normalized = complaints.map((c) => ({
-    ...c,
-    priority: String(c.priority).toLowerCase().trim(),
-  }));
-
-  // 📊 STATS (REAL-TIME NOW WORKS)
-  const stats = {
-    high: normalized.filter((c) => c.priority === "high").length,
-    medium: normalized.filter((c) => c.priority === "medium").length,
-    low: normalized.filter((c) => c.priority === "low").length,
-  };
-
-  // 🔥 MOST FREQUENT CATEGORY (FIXED)
-  const categoryCount: any = {};
-  normalized.forEach((c) => {
-    categoryCount[c.category] = (categoryCount[c.category] || 0) + 1;
+  // 🧠 Smart search (FIXED)
+  const filtered = complaints.filter((c) => {
+    const text = `${c.description} ${c.category} ${c.priority}`.toLowerCase();
+    return text.includes(search.toLowerCase());
   });
 
-  const topCategory =
-    Object.keys(categoryCount).length > 0
-      ? Object.keys(categoryCount).reduce((a, b) =>
-          categoryCount[a] > categoryCount[b] ? a : b
-        )
-      : "...";
+  // 📊 Stats
+  const stats = {
+    high: complaints.filter((c) => c.priority === "high").length,
+    medium: complaints.filter((c) => c.priority === "medium").length,
+    low: complaints.filter((c) => c.priority === "low").length,
+  };
 
   return (
-    <div className="flex bg-[#F4F8FF] min-h-screen">
+    <div className="flex bg-[#F5F7FB] min-h-screen">
       <Sidebar />
 
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 p-8 space-y-6">
         {/* 🔹 Header */}
-        <h1 className="text-2xl font-semibold text-gray-900">
-          AI Performance Insights
-        </h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            AI Dashboard
+          </h1>
 
-        {/* 🔹 Priority Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          <PriorityCard title="High Priority" value={stats.high} color="red" />
-          <PriorityCard
-            title="Medium Priority"
-            value={stats.medium}
-            color="blue"
+          {/* 🔍 Search */}
+          <input
+            type="text"
+            placeholder="Search complaints..."
+            className="border px-4 py-2 rounded-lg w-72 shadow-sm focus:ring-2 focus:ring-blue-500"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
-          <PriorityCard title="Low Priority" value={stats.low} color="green" />
         </div>
 
-        {/* 🔹 Middle Section */}
+        {/* 🔹 Stats Cards */}
         <div className="grid grid-cols-3 gap-6">
-          {/* AI Accuracy */}
-          <div className="col-span-2 bg-white p-5 rounded-xl shadow-sm border">
-            <h3 className="font-medium mb-4">
-              AI Accuracy by Category
-            </h3>
-
-            <div className="space-y-3">
-              {["HVAC", "IT", "Maintenance"].map((cat) => (
-                <div key={cat}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>{cat}</span>
-                    <span>90%</span>
-                  </div>
-
-                  <div className="bg-gray-200 h-2 rounded">
-                    <div className="bg-blue-500 h-2 rounded w-[90%]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Insights Card */}
-          <div className="bg-blue-900 text-white p-5 rounded-xl shadow">
-            <h3 className="font-medium mb-4">
-              Classification Insights
-            </h3>
-
-            <p className="text-sm">
-              Most frequent category:{" "}
-              <strong>{topCategory}</strong>
-            </p>
-
-            <p className="text-sm mt-2">
-              Accuracy improving across system.
-            </p>
-
-            <button className="mt-4 bg-white text-blue-900 px-3 py-2 rounded">
-              View Report
-            </button>
-          </div>
+          <Card title="High Priority" value={stats.high} color="red" />
+          <Card title="Medium Priority" value={stats.medium} color="blue" />
+          <Card title="Low Priority" value={stats.low} color="green" />
         </div>
 
-        {/* 🔹 Real-time Queue */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border">
-          <h3 className="font-medium mb-4">
-            Real-time Priority Queue
+        {/* 🔹 Complaints */}
+        <div className="bg-white p-6 rounded-xl shadow-sm">
+          <h3 className="font-semibold mb-4 text-gray-800">
+            Live Complaints
           </h3>
 
           {loading ? (
             <p className="text-gray-400">Loading...</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-gray-400">No results found</p>
           ) : (
-            complaints.map((c) => (
+            filtered.map((c) => (
               <div
                 key={c.id}
-                className="flex justify-between items-center border-b py-3"
+                className="flex justify-between items-center p-4 border rounded-lg mb-3 hover:shadow-md transition"
               >
                 <div>
-                  <p className="font-medium">{c.description}</p>
+                  <p className="font-medium text-gray-900">
+                    {c.description}
+                  </p>
                   <p className="text-xs text-gray-500">
-                    {c.time} · {c.category}
+                    {c.category} • {c.time}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <Badge priority={c.priority} />
+
                   <span className="text-xs text-gray-500">
                     {c.confidence}% AI
                   </span>
-                  <button className="bg-blue-500 text-white px-3 py-1 rounded text-xs">
+
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">
                     Action
                   </button>
                 </div>
@@ -167,26 +118,26 @@ export default function Performance() {
   );
 }
 
-/* 🔹 Components */
-
-function PriorityCard({ title, value, color }: any) {
-  const colors: any = {
-    red: "border-l-4 border-red-500",
-    blue: "border-l-4 border-blue-500",
-    green: "border-l-4 border-green-500",
+// 🔹 Card Component
+function Card({ title, value, color }: any) {
+  const styles: any = {
+    red: "bg-red-50 border-red-400 text-red-600",
+    blue: "bg-blue-50 border-blue-400 text-blue-600",
+    green: "bg-green-50 border-green-400 text-green-600",
   };
 
   return (
-    <div className={`bg-white p-4 rounded-xl shadow-sm ${colors[color]}`}>
-      <p className="text-sm text-gray-500">{title}</p>
-      <h2 className="text-xl font-bold text-gray-900">{value}</h2>
+    <div
+      className={`p-5 rounded-xl border-l-4 shadow-sm ${styles[color]}`}
+    >
+      <p className="text-sm">{title}</p>
+      <h2 className="text-2xl font-bold">{value}</h2>
     </div>
   );
 }
 
+// 🔹 Badge
 function Badge({ priority }: any) {
-  const p = String(priority).toLowerCase().trim();
-
   const styles: any = {
     high: "bg-red-100 text-red-600",
     medium: "bg-blue-100 text-blue-600",
@@ -194,8 +145,8 @@ function Badge({ priority }: any) {
   };
 
   return (
-    <span className={`px-2 py-1 text-xs rounded ${styles[p]}`}>
-      {p.charAt(0).toUpperCase() + p.slice(1)}
+    <span className={`px-2 py-1 text-xs rounded ${styles[priority]}`}>
+      {priority}
     </span>
   );
 }

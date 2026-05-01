@@ -2,11 +2,19 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Connecting to MongoDB...");
+    
+    console.log("URI USED:", process.env.MONGO_URI); // 🔥 ADD THIS
 
-    console.log("MongoDB Connected");
+    await mongoose.connect(process.env.MONGO_URI, {
+  tlsAllowInvalidCertificates: true
+});
+
+    console.log("MongoDB Connected ✅");
+    console.log("Connected DB:", mongoose.connection.name); // ✅ MOVE INSIDE TRY
+
   } catch (error) {
-    console.error(error);
+    console.error("Mongo Error ❌:", error.message);
     process.exit(1);
   }
 };

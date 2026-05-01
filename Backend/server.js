@@ -6,27 +6,29 @@ const cors = require("cors");
 
 const complaintRoutes = require("./routes/complaintRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const aiRoutes = require("./routes/aiRoutes"); // ✅ FIXED
 
 const app = express();
 
+// middleware
 app.use(cors());
 app.use(express.json());
-
 app.use("/uploads", express.static("uploads"));
 
-mongoose.connect("mongodb://127.0.0.1:27017/complaintsDB")
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log(err));
+// DB connect
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected ✅"))
+  .catch(err => console.log("DB Error:", err));
 
+// routes
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/ai", aiRoutes);
 
-app.get("/", (req,res)=>{
-  res.send("Smart Complaint System API Running");
+// test route
+app.get("/", (req, res) => {
+  res.send("API Running ✅");
 });
 
+// server
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });

@@ -66,7 +66,7 @@ if (file) {
 }
 
 const res = await axios.post(
-"http://localhost:5000/api/complaints/submit",
+`${import.meta.env.VITE_API_URL}/api/complaints/submit`,
 data
 );
 

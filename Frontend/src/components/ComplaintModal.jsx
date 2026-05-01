@@ -7,7 +7,7 @@ const updateStatus = async (status) => {
 try {
 
 await axios.put(
-`http://localhost:5000/api/complaints/status/${complaint._id}`,
+`${import.meta.env.VITE_API_URL}/api/complaints/status/${complaint._id}`,
 { status }
 );
 

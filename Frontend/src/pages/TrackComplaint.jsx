@@ -13,7 +13,7 @@ const handleTrack = async () => {
 try {
 
 const res = await axios.get(
-`http://localhost:5000/api/complaints/track/${id}`
+`${import.meta.env.VITE_API_URL}/api/complaints/track/${id}`
 );
 
 setComplaint(res.data);
@@ -93,7 +93,7 @@ Track Status →
 {complaint.file ? (
 
 <img
-src={`http://localhost:5000/uploads/${complaint.file}`}
+src={`${import.meta.env.VITE_API_URL}/uploads/${complaint.file}`}
 alt="Complaint Evidence"
 className="rounded-lg w-full object-cover"
 />

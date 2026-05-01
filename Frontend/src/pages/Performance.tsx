@@ -18,7 +18,7 @@ export default function Performance() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/complaints");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/complaints`);
         const data = await res.json();
         setComplaints(data);
         setLoading(false);

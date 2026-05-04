@@ -1,79 +1,87 @@
-Complaint Management System
+COMPLAINT MANAGEMENT SYSTEM
 
-A full-stack web application to efficiently submit, track, and manage complaints. Built with a modern tech stack and deployed using cloud platforms for real-world usability.
+This project is a Complaint Management System designed to streamline the process of submitting, tracking, and managing user complaints efficiently. It integrates a modern frontend with a robust backend and database to ensure smooth handling of user requests
 
-Links
+## Features
 
-Features
-[*] User complaint submission
-[*] Secure admin login and authentication
-[*] Admin dashboard for complaint management
-[*] REST API integration
-[*] Cloud deployment (Vercel + Render)
-[*] MongoDB Atlas database
-Tech Stack
-Frontend
-React (Vite)
-TypeScript
-Axios
-Tailwind CSS
-Backend
-Node.js
-Express.js
-MongoDB (Mongoose)
-Deployment
-Vercel
-Render
-MongoDB Atlas
-Project Structure
+- User complaint submission  
+- Secure admin login and authentication  
+- Admin dashboard for complaint management  
+- REST API integration  
+- Cloud deployment (Vercel + Render)  
+- MongoDB Atlas database
+
+## Tech Stack
+
+### Frontend
+- React (Vite), TypeScript ,Tailwind CSS
+
+### Backend
+- Node.js, Express.js ,MongoDB (Mongoose)
+
+### Deployment
+- Vercel ,Render, MongoDB Atlas
+
+  ## Project Structure
+
+```bash
 Complaint-Management-System/
 │
 ├── frontend/        # React frontend
 ├── backend/         # Node.js + Express backend
-├── README.md
-Installation and Setup
-1. Clone Repository
+└── README.md
+
+```
+## Installation and Setup
+
+### 1. Clone Repository
+
+```bash
 git clone https://github.com/your-username/your-repo-name.git
 cd your-repo-name
-2. Backend Setup
+```
+### 2. Backend Setup
+
+```bash
 cd backend
 npm install
+```
+###Run backend:
 
-Create a .env file:
-
-MONGO_URI=your_mongodb_connection_string
-PORT=5000
-
-Run backend:
-
+```bash
 npm start
-3. Frontend Setup
+```
+### 3. Frontend Setup
+
+```bash
 cd frontend
 npm install
 npm run dev
-Environment Variables
-Variable	Description
-MONGO_URI	MongoDB Atlas connection string
-PORT	Backend server port
-Common Issues
-MongoDB connection error
-Ensure IP is whitelisted in MongoDB Atlas
-Verify connection string
-CORS issues
-Enable CORS in backend
-500 server error
-Check backend logs on Render
-Future Improvements
-Role-based access control
-Email notifications
-Complaint status tracking
-Author
+```
+## Common Issues
 
-Radhika Gupta
-GitHub : https://github.com/Radhikaa45
+### MongoDB Connection Error
+- Ensure IP is whitelisted in MongoDB Atlas  
+- Verify connection string  
 
-LinkedIn : https://www.linkedin.com/in/radhika-gupta
+### CORS Issues
+- Enable CORS in backend  
 
-Support
+### 500 Server Error
+- Check backend logs on Render  
 
-If you find this project useful, consider giving it a star on GitHub.
+---
+
+## Admin Access
+
+Use the following demo credentials to access the admin dashboard:
+
+- Username : Admin@office.com 
+- Password : 963258
+
+## Author
+
+Radhika Gupta  
+
+GitHub   : https://github.com/Radhikaa45  
+LinkedIn : hhttps://www.linkedin.com/in/radhika-gupta-2671b1326

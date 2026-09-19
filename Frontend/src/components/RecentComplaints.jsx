@@ -1,72 +1,48 @@
-function RecentComplaints({ complaints }) {
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { StatusBadge, PriorityBadge } from "./Badges";
+import { timeAgo } from "../utils/complaint";
 
-const recent = complaints.slice(0,5);
+function RecentComplaints({ complaints, onSelect, title = "Recent Complaints", limit = 6, emptyText = "No complaints yet." }) {
 
-return (
+  const recent = complaints.slice(0, limit);
 
-<div className="bg-white p-6 rounded-lg shadow col-span-2">
+  return (
+    <div className="card overflow-hidden">
 
-<h2 className="font-semibold mb-4">
-Recent Complaints
-</h2>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 className="font-semibold text-gray-900">{title}</h2>
+        <Link to="/admin/complaints" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+          View all <ArrowRight size={14} />
+        </Link>
+      </div>
 
-<table className="w-full">
+      {recent.length === 0 ? (
+        <p className="text-sm text-gray-400 px-6 py-10 text-center">{emptyText}</p>
+      ) : (
+        <ul className="divide-y divide-gray-100">
+          {recent.map((c) => (
+            <li key={c._id}>
+              <button
+                onClick={() => onSelect?.(c)}
+                className="w-full text-left px-6 py-3.5 hover:bg-slate-50 transition flex items-center gap-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-800 truncate">{c.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    <span className="font-mono">#{c.complaintId}</span> · {c.name} · {timeAgo(c.createdAt)}
+                  </p>
+                </div>
+                <div className="hidden sm:block"><PriorityBadge priority={c.priority} /></div>
+                <StatusBadge status={c.status} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
-<thead className="text-gray-500 text-sm">
-
-<tr>
-
-<th>ID</th>
-<th>Subject</th>
-<th>Status</th>
-<th>Date</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{recent.map(c => (
-
-<tr key={c._id} className="border-t">
-
-<td className="py-3">{c.complaintId}</td>
-
-<td>{c.title}</td>
-
-<td>
-
-<span
-className={`px-2 py-1 text-xs rounded
-${c.status==="Resolved" && "bg-green-100 text-green-700"}
-${c.status==="Submitted" && "bg-blue-100 text-blue-600"}
-${c.status==="In Process" && "bg-yellow-100 text-yellow-600"}
-`}
->
-
-{c.status}
-
-</span>
-
-</td>
-
-<td>
-{new Date(c.createdAt).toLocaleDateString()}
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-</div>
-
-);
-
+    </div>
+  );
 }
 
 export default RecentComplaints;

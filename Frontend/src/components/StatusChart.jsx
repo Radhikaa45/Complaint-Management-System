@@ -1,143 +1,66 @@
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { STATUSES, STATUS_COLORS } from "../utils/complaint";
 
 function StatusChart({ complaints }) {
 
-const submitted = complaints.filter(
-c => c.status === "Submitted"
-).length;
+  const total = complaints.length;
 
-const inReview = complaints.filter(
-c => c.status === "In Process"
-).length;
+  const data = STATUSES.map((s) => ({
+    name: s,
+    value: complaints.filter((c) => c.status === s).length
+  }));
 
-const resolved = complaints.filter(
-c => c.status === "Resolved"
-).length;
+  const percentage = (value) => (total ? Math.round((value / total) * 100) : 0);
 
-const total = complaints.length;
+  return (
+    <div className="card p-6 self-start">
 
-const data = [
-{ name: "Submitted", value: submitted },
-{ name: "In Review", value: inReview },
-{ name: "Resolved", value: resolved }
-];
+      <h2 className="font-semibold text-gray-900 mb-4">Status Breakdown</h2>
 
-const COLORS = ["#0850d4", "#facc15", "#10b981"];
+      {/* Donut Chart */}
+      <div className="relative w-full h-56">
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={total ? data : [{ name: "None", value: 1 }]}
+              dataKey="value"
+              innerRadius={65}
+              outerRadius={88}
+              paddingAngle={total ? 3 : 0}
+              stroke="none"
+            >
+              {(total ? data : [{ name: "None" }]).map((entry) => (
+                <Cell key={entry.name} fill={STATUS_COLORS[entry.name] || "#e5e7eb"} />
+              ))}
+            </Pie>
+            {total > 0 && <Tooltip />}
+          </PieChart>
+        </ResponsiveContainer>
 
-const percentage = (value) =>
-total ? Math.round((value / total) * 100) : 0;
+        {/* Center Total */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-3xl font-bold text-gray-900">{total}</span>
+          <span className="text-gray-400 text-xs tracking-wide">TOTAL</span>
+        </div>
+      </div>
 
-return (
+      {/* Legend */}
+      <div className="mt-4 space-y-2 text-sm">
+        {data.map((d) => (
+          <div key={d.name} className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-gray-600">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: STATUS_COLORS[d.name] }} />
+              {d.name}
+            </div>
+            <span className="text-gray-900 font-medium">
+              {d.value} <span className="text-gray-400 font-normal">({percentage(d.value)}%)</span>
+            </span>
+          </div>
+        ))}
+      </div>
 
-<div className="bg-white p-6 rounded-xl shadow border">
-
-<h2 className="font-semibold mb-6">
-Complaint Status Chart
-</h2>
-
-{/* Donut Chart */}
-
-<div className="relative w-full h-60">
-
-<ResponsiveContainer>
-
-<PieChart>
-
-<Pie
-data={data}
-dataKey="value"
-innerRadius={70}
-outerRadius={90}
-paddingAngle={4}
->
-
-{data.map((entry, index) => (
-<Cell key={index} fill={COLORS[index]} />
-))}
-
-</Pie>
-
-</PieChart>
-
-</ResponsiveContainer>
-
-{/* Center Total */}
-
-<div className="absolute inset-0 flex flex-col items-center justify-center">
-
-<h2 className="text-2xl font-bold">
-{total}
-</h2>
-
-<p className="text-gray-400 text-sm">
-TOTAL
-</p>
-
-</div>
-
-</div>
-
-
-{/* Legend */}
-
-<div className="mt-6 space-y-2 text-sm">
-
-<div className="flex justify-between items-center">
-
-<div className="flex items-center gap-2">
-
-<span className="w-3 h-3 rounded-full bg-blue-500"></span>
-
-Submitted
-
-</div>
-
-<span>
-{submitted} ({percentage(submitted)}%)
-</span>
-
-</div>
-
-
-<div className="flex justify-between items-center">
-
-<div className="flex items-center gap-2">
-
-<span className="w-3 h-3 rounded-full bg-yellow-400"></span>
-
-In Review
-
-</div>
-
-<span>
-{inReview} ({percentage(inReview)}%)
-</span>
-
-</div>
-
-
-<div className="flex justify-between items-center">
-
-<div className="flex items-center gap-2">
-
-<span className="w-3 h-3 rounded-full bg-green-500"></span>
-
-Resolved
-
-</div>
-
-<span>
-{resolved} ({percentage(resolved)}%)
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-);
-
+    </div>
+  );
 }
 
 export default StatusChart;

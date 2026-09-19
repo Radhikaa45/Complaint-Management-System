@@ -1,84 +1,41 @@
-function Workflow(){
+import { FilePlus2, BrainCircuit, Wrench, MessageSquareHeart } from "lucide-react";
 
-return(
+const steps = [
+  { icon: FilePlus2, title: "Instant Reporting", text: "Describe the issue and attach a photo or PDF. You get a tracking ID by email right away." },
+  { icon: BrainCircuit, title: "Smart Triage", text: "AI tags every complaint with a category and priority so urgent issues reach the right team first." },
+  { icon: Wrench, title: "Tracked Resolution", text: "Follow every status change and note from our team in a live timeline." },
+  { icon: MessageSquareHeart, title: "Feedback Loop", text: "Rate the resolution once it's done, so we can keep improving." }
+];
 
-<section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-2 gap-10 items-center">
+function Workflow() {
 
-<div>
+  return (
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
 
-<h2 className="text-4xl font-bold">
+      <div className="max-w-2xl mb-12">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          Simplified Workflow for <span className="text-blue-600">Peak Performance</span>
+        </h2>
+        <p className="text-gray-500 mt-4">
+          From report to resolution in four transparent steps.
+        </p>
+      </div>
 
-Simplified Workflow for
+      <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {steps.map(({ icon: Icon, title, text }, i) => (
+          <li key={title} className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:-translate-y-1 hover:shadow-md transition">
+            <span className="absolute top-5 right-5 text-5xl font-extrabold text-gray-100 select-none">{i + 1}</span>
+            <div className="relative w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4 shadow-sm">
+              <Icon size={22} />
+            </div>
+            <h3 className="relative font-semibold text-gray-900">{title}</h3>
+            <p className="relative text-gray-500 text-sm mt-2">{text}</p>
+          </li>
+        ))}
+      </ol>
 
-<span className="text-blue-600">
- Peak Performance
-</span>
-
-</h2>
-
-<p className="text-gray-500 mt-4">
-
-Our platform handles the complexity of modern office
-management.
-
-</p>
-
-<ul className="mt-8 space-y-6">
-
-<li>
-<h4 className="font-semibold">1. Instant Reporting</h4>
-<p className="text-gray-500 text-sm">
-Capture issues instantly.
-</p>
-</li>
-
-<li>
-<h4 className="font-semibold">2. Automated Routing</h4>
-<p className="text-gray-500 text-sm">
-Assign complaints automatically.
-</p>
-</li>
-
-<li>
-<h4 className="font-semibold">3. Feedback Loop</h4>
-<p className="text-gray-500 text-sm">
-Improve operations with feedback.
-</p>
-</li>
-
-</ul>
-
-</div>
-
-
-<div className="grid grid-cols-2 gap-4">
-
-<img
-src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
-className="rounded-xl"
-/>
-
-<img
-src="https://images.unsplash.com/photo-1551434678-e076c223a692"
-className="rounded-xl"
-/>
-
-<img
-src="https://images.unsplash.com/photo-1581091012184-5c7c1d1e1d2c"
-className="rounded-xl"
-/>
-
-<img
-src="https://images.unsplash.com/photo-1557804506-669a67965ba0"
-className="rounded-xl"
-/>
-
-</div>
-
-</section>
-
-);
-
+    </section>
+  );
 }
 
 export default Workflow;

@@ -8,14 +8,18 @@ const {
   createComplaint,
   getComplaints,
   trackComplaint,
-  updateStatus
+  updateStatus,
+  deleteComplaint,
+  submitFeedback,
+  getPublicStats
 } = require("../controllers/complaintController");
+const { requireAdmin } = require("../middleware/auth");
 
 
-// 🟢 Ensure uploads folder exists
-const uploadPath = "uploads/";
+// 🟢 Ensure uploads folder exists (relative to the backend, not the cwd)
+const uploadPath = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath);
+  fs.mkdirSync(uploadPath, { recursive: true });
 }
 
 
@@ -26,20 +30,21 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
+    // Strip anything odd from the original name so it is safe in URLs and on disk
+    const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
+    cb(null, `${Date.now()}-${safeName}`);
   }
 });
 
 
-// 🟢 File Filter (optional but recommended)
+// 🟢 File Filter
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only JPG, PNG, PDF files allowed"), false);
+    cb(new Error("Only JPG, PNG, WEBP or PDF files are allowed"), false);
   }
 };
 
@@ -52,55 +57,34 @@ const upload = multer({
 });
 
 
-// 🟢 ROUTES
+// 🟢 PUBLIC ROUTES
 
-// Submit Complaint (with file upload)
-router.post("/submit", upload.single("file"), (req, res, next) => {
-  console.log("Incoming Request Body:", req.body);
-  console.log("Incoming File:", req.file);
-  next();
-}, createComplaint);
+router.post("/submit", upload.single("file"), createComplaint);
 
+router.get("/track/:id", trackComplaint);
 
-// Get All Complaints
-router.get("/", async (req, res, next) => {
-  try {
-    await getComplaints(req, res);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch complaints" });
-  }
-});
+router.post("/feedback/:id", submitFeedback);
+
+router.get("/public-stats", getPublicStats);
 
 
-// Track Complaint by complaintId
-router.get("/track/:id", async (req, res, next) => {
-  try {
-    await trackComplaint(req, res);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Tracking failed" });
-  }
-});
+// 🔒 ADMIN ROUTES
+
+router.get("/", requireAdmin, getComplaints);
+
+router.put("/status/:id", requireAdmin, updateStatus);
+
+router.delete("/:id", requireAdmin, deleteComplaint);
 
 
-// Update Complaint Status
-router.put("/status/:id", async (req, res, next) => {
-  try {
-    await updateStatus(req, res);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Update failed" });
-  }
-});
-
-
-// 🛑 Global multer error handler
+// 🛑 Multer / upload error handler
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    return res.status(400).json({ error: err.message });
-  } else if (err) {
-    return res.status(400).json({ error: err.message });
+    const message = err.code === "LIMIT_FILE_SIZE" ? "File is too large (max 5MB)" : err.message;
+    return res.status(400).json({ message });
+  }
+  if (err) {
+    return res.status(400).json({ message: err.message });
   }
   next();
 });

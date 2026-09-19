@@ -1,265 +1,237 @@
-import { useState } from "react";
-import axios from "axios";
-import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Search, Loader2, FileText, Star, Paperclip } from "lucide-react";
+import { trackComplaint, sendFeedback, uploadUrl, errorMessage } from "../api";
+import { useToast } from "../context/toast";
+import { StatusBadge, PriorityBadge, CategoryBadge } from "../components/Badges";
+import StatusTimeline from "../components/StatusTimeline";
+import { formatDate, isImage } from "../utils/complaint";
+
+function FeedbackForm({ complaint, onSaved }) {
+
+  const toast = useToast();
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  if (complaint.feedback?.rating) {
+    return (
+      <div className="card p-6">
+        <h3 className="font-semibold text-gray-900">Your Feedback</h3>
+        <div className="flex gap-1 mt-3">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Star key={n} size={22} className={n <= complaint.feedback.rating ? "fill-amber-400 text-amber-400" : "text-gray-300"} />
+          ))}
+        </div>
+        {complaint.feedback.comment && <p className="text-sm text-gray-600 mt-3">"{complaint.feedback.comment}"</p>}
+        <p className="text-xs text-gray-400 mt-3">Thanks for helping us improve!</p>
+      </div>
+    );
+  }
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!rating) return toast.error("Please choose a rating");
+    setSaving(true);
+    try {
+      const res = await sendFeedback(complaint.complaintId, rating, comment);
+      toast.success(res.message);
+      onSaved(res.complaint);
+    } catch (error) {
+      toast.error(errorMessage(error, "Could not save feedback"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="card p-6">
+      <h3 className="font-semibold text-gray-900">How did we do?</h3>
+      <p className="text-sm text-gray-500 mt-1">Rate how your complaint was handled.</p>
+
+      <div className="flex gap-1 mt-4" onMouseLeave={() => setHover(0)}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button type="button" key={n} onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} aria-label={`${n} star`}>
+            <Star size={28} className={`transition ${n <= (hover || rating) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        maxLength={500}
+        rows={3}
+        placeholder="Anything else you'd like to share? (optional)"
+        className="input mt-4"
+      />
+
+      <button disabled={saving} className="btn-primary mt-4">
+        {saving && <Loader2 size={16} className="animate-spin" />} Submit Feedback
+      </button>
+    </form>
+  );
+}
 
 function TrackComplaint() {
 
-const [id, setId] = useState("");
-const [complaint, setComplaint] = useState(null);
-const [error, setError] = useState("");
-
-const handleTrack = async () => {
-
-try {
-
-const res = await axios.get(
-`${import.meta.env.VITE_API_URL}/api/complaints/track/${id}`
-);
-
-setComplaint(res.data);
-setError("");
-
-} catch (err) {
-
-setComplaint(null);
-setError("Complaint not found");
-
-}
-
-};
-
-return (
-
-<div className="bg-gray-100 min-h-screen py-16">
-
-<div className="max-w-4xl mx-auto px-6">
-
-<h1 className="text-4xl font-bold text-gray-800 mb-3">
-Track Complaint
-</h1>
-
-<p className="text-gray-500 mb-10">
-Enter your complaint ID below to check the real-time resolution status.
-</p>
-
-
-{/* Search Box */}
-
-<div className="bg-white p-6 rounded-xl shadow flex gap-4 items-center">
-
-<div className="flex items-center gap-2 flex-1 border rounded-lg px-3 py-2">
-
-<Search size={18} className="text-gray-400" />
-
-<input
-type="text"
-placeholder="Complaint Reference ID"
-value={id}
-onChange={(e)=>setId(e.target.value)}
-className="outline-none w-full"
-/>
-
-</div>
-
-<button
-onClick={handleTrack}
-className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition"
->
-
-Track Status →
-
-</button>
-
-</div>
-
-
-{/* Error */}
-
-{error && (
-<p className="text-red-500 mt-6">{error}</p>
-)}
-
-
-{/* Complaint Result */}
-
-{complaint && (
-
-<div className="mt-10 bg-white rounded-xl shadow overflow-hidden flex">
-
-{/* Image Panel */}
-
-<div className="w-1/3 bg-blue-100 flex items-center justify-center p-6">
-
-{complaint.file ? (
-
-<img
-src={`${import.meta.env.VITE_API_URL}/uploads/${complaint.file}`}
-alt="Complaint Evidence"
-className="rounded-lg w-full object-cover"
-/>
-
-) : (
-
-<p className="text-gray-400 text-sm">
-No image uploaded
-</p>
-
-)}
-
-</div>
-
-
-{/* Details */}
-
-<div className="p-6 flex-1">
-
-<div className="flex justify-between items-center mb-3">
-
-<p className="text-blue-600 text-sm font-medium">
-REF: {complaint.complaintId}
-</p>
-
-<span
-className={`px-3 py-1 text-xs rounded-full
-${complaint.status==="Resolved" && "bg-green-100 text-green-700"}
-${complaint.status==="Submitted" && "bg-blue-100 text-blue-700"}
-${complaint.status==="In Process" && "bg-yellow-100 text-yellow-700"}
-`}
->
-
-{complaint.status}
-
-</span>
-
-</div>
-
-
-<h2 className="text-xl font-semibold mb-3">
-{complaint.title}
-</h2>
-
-
-<p className="text-gray-600 mb-6">
-{complaint.description}
-</p>
-
-
-{/* Additional Details */}
-
-<div className="grid grid-cols-2 gap-6 text-sm text-gray-600">
-
-<div>
-<p className="text-gray-400 text-xs">
-Customer Name
-</p>
-<p>{complaint.name}</p>
-</div>
-
-
-<div>
-<p className="text-gray-400 text-xs">
-Email Address
-</p>
-<p>{complaint.email}</p>
-</div>
-
-
-<div>
-<p className="text-gray-400 text-xs">
-Complaint ID
-</p>
-<p>{complaint.complaintId}</p>
-</div>
-
-
-<div>
-<p className="text-gray-400 text-xs">
-Status
-</p>
-<p>{complaint.status}</p>
-</div>
-
-
-<div>
-<p className="text-gray-400 text-xs">
-Submitted On
-</p>
-
-<p>
-{complaint.createdAt
-? new Date(complaint.createdAt).toLocaleString("en-IN",{
-day:"2-digit",
-month:"long",
-year:"numeric",
-hour:"2-digit",
-minute:"2-digit"
-})
-: "N/A"}
-</p>
-
-</div>
-
-
-{/* Show resolved time only if resolved */}
-
-{complaint.status === "Resolved" && complaint.resolvedAt && (
-
-<div>
-<p className="text-gray-400 text-xs">
-Resolved On
-</p>
-
-<p>
-{new Date(complaint.resolvedAt).toLocaleString("en-IN",{
-day:"2-digit",
-month:"long",
-year:"numeric",
-hour:"2-digit",
-minute:"2-digit"
-})}
-</p>
-
-</div>
-
-)}
-
-</div>
-
-</div>
-
-</div>
-
-)}
-
-
-{/* Footer */}
-
-<div className="text-center mt-12 text-gray-500 text-sm">
-
-<p>Need further assistance?</p>
-
-<p className="mt-2">
-
-<span className="text-blue-600 font-medium cursor-pointer">
-Contact Support
-</span>
-
-{" "}•{" "}
-
-<span className="text-blue-600 font-medium cursor-pointer">
-FAQs
-</span>
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-);
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [id, setId] = useState(searchParams.get("id") || "");
+  const [complaint, setComplaint] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const lookup = async (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setError("Please enter your complaint ID");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await trackComplaint(trimmed);
+      setComplaint(data);
+      setSearchParams({ id: data.complaintId }, { replace: true });
+    } catch (err) {
+      setComplaint(null);
+      setError(err.response?.status === 404 ? "No complaint found with that ID. Please check and try again." : errorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* Auto-track when opened from a link like /track?id=abc123 */
+  useEffect(() => {
+    const initial = searchParams.get("id");
+    if (initial) lookup(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    lookup(id);
+  };
+
+  return (
+    <div className="bg-slate-50 min-h-screen py-10 sm:py-16">
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Track Complaint</h1>
+        <p className="text-gray-500 mb-8">Enter your complaint ID to check its real-time resolution status.</p>
+
+        {/* Search Box */}
+        <form onSubmit={handleSubmit} className="card p-4 sm:p-5 flex flex-col sm:flex-row gap-3">
+          <div className="flex items-center gap-2 flex-1 border border-gray-200 rounded-lg px-3 focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-500">
+            <Search size={18} className="text-gray-400" />
+            <input
+              type="text"
+              placeholder="e.g. 3f9a2c1b"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+              className="outline-none w-full py-2.5 font-mono"
+              aria-label="Complaint ID"
+            />
+          </div>
+          <button type="submit" disabled={loading} className="btn-primary px-6">
+            {loading ? <Loader2 size={18} className="animate-spin" /> : "Track Status →"}
+          </button>
+        </form>
+
+        {error && (
+          <p className="text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-4 py-3 mt-6 text-sm">{error}</p>
+        )}
+
+        {/* Complaint Result */}
+        {complaint && (
+          <div className="mt-8 grid lg:grid-cols-5 gap-6 animate-slide-up">
+
+            <div className="lg:col-span-3 space-y-6">
+              <div className="card p-6">
+
+                <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+                  <p className="text-blue-600 text-sm font-mono font-semibold">#{complaint.complaintId}</p>
+                  <StatusBadge status={complaint.status} />
+                </div>
+
+                <h2 className="text-xl font-semibold text-gray-900 break-words">{complaint.title}</h2>
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <CategoryBadge category={complaint.category} />
+                  <PriorityBadge priority={complaint.priority} />
+                </div>
+
+                <p className="text-gray-600 mt-4 whitespace-pre-line break-words">{complaint.description}</p>
+
+                <dl className="grid grid-cols-2 gap-4 text-sm mt-6 pt-6 border-t border-gray-100">
+                  <div>
+                    <dt className="text-gray-400 text-xs">Submitted by</dt>
+                    <dd className="text-gray-700">{complaint.name}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-gray-400 text-xs">User type</dt>
+                    <dd className="text-gray-700">{complaint.userType || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-gray-400 text-xs">Submitted on</dt>
+                    <dd className="text-gray-700">{formatDate(complaint.createdAt)}</dd>
+                  </div>
+                  {complaint.status === "Resolved" && (
+                    <div>
+                      <dt className="text-gray-400 text-xs">Resolved on</dt>
+                      <dd className="text-gray-700">{formatDate(complaint.resolvedAt)}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                {complaint.file && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <p className="text-gray-400 text-xs mb-2 flex items-center gap-1"><Paperclip size={12} /> Attachment</p>
+                    {isImage(complaint.file) ? (
+                      <a href={uploadUrl(complaint.file)} target="_blank" rel="noreferrer">
+                        <img src={uploadUrl(complaint.file)} alt="Complaint attachment" className="rounded-lg max-h-72 object-cover border border-gray-100" />
+                      </a>
+                    ) : (
+                      <a href={uploadUrl(complaint.file)} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
+                        <FileText size={18} /> View attached document
+                      </a>
+                    )}
+                  </div>
+                )}
+
+              </div>
+
+              {complaint.status === "Resolved" && (
+                <FeedbackForm complaint={complaint} onSaved={setComplaint} />
+              )}
+            </div>
+
+            <div className="lg:col-span-2">
+              <div className="card p-6">
+                <h3 className="font-semibold text-gray-900 mb-5">Progress</h3>
+                <StatusTimeline complaint={complaint} />
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        <div className="text-center mt-12 text-gray-500 text-sm">
+          <p>Lost your complaint ID? Check the confirmation email we sent you.</p>
+          <p className="mt-2">
+            Haven't reported yet? <Link to="/submit" className="text-blue-600 font-medium hover:underline">Submit a complaint</Link>
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  );
 }
 
 export default TrackComplaint;

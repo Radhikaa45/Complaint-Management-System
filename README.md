@@ -1,87 +1,59 @@
-COMPLAINT MANAGEMENT SYSTEM
+# SmartOffice – Complaint Management System
 
-This project is a Complaint Management System designed to streamline the process of submitting, tracking, and managing user complaints efficiently. It integrates a modern frontend with a robust backend and database to ensure smooth handling of user requests
+Submit, track and resolve workplace complaints. React + Vite + Tailwind frontend, Express + MongoDB backend.
 
 ## Features
 
-- User complaint submission  
-- Secure admin login and authentication  
-- Admin dashboard for complaint management  
-- REST API integration  
-- Cloud deployment (Vercel + Render)  
-- MongoDB Atlas database
+- **Submit** complaints with drag-and-drop image/PDF attachments; get a tracking ID by email
+- **AI triage** – every complaint is auto-tagged with a category and priority (Groq, with an offline keyword fallback)
+- **Track** by ID (`/track?id=...` deep links) with a live status timeline and notes from the team
+- **Feedback** – users rate resolved complaints (1–5 stars)
+- **Admin dashboard** (JWT-protected) – KPIs, status chart, "needs attention" queue
+- **Complaints manager** – search, filter, sort, paginate, export CSV, update status with notes, change priority/category, delete
+- **Analytics** – daily volume trend, category/priority/user-type breakdowns, resolution time, satisfaction
 
-## Tech Stack
-
-### Frontend
-- React (Vite), TypeScript ,Tailwind CSS
+## Setup
 
 ### Backend
-- Node.js, Express.js ,MongoDB (Mongoose)
-
-### Deployment
-- Vercel ,Render, MongoDB Atlas
-
-  ## Project Structure
 
 ```bash
-Complaint-Management-System/
-│
-├── frontend/        # React frontend
-├── backend/         # Node.js + Express backend
-└── README.md
-
-```
-## Installation and Setup
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-```
-### 2. Backend Setup
-
-```bash
-cd backend
+cd Backend
 npm install
+cp .env.example .env        # then fill in MONGO_URI, JWT_SECRET, ...
+npm run create-admin -- admin@example.com "YourStrongPassword"
+npm run dev                 # http://localhost:5000
 ```
-###Run backend:
+
+### Frontend
 
 ```bash
-npm start
-```
-### 3. Frontend Setup
-
-```bash
-cd frontend
+cd Frontend
 npm install
-npm run dev
+echo "VITE_API_URL=http://localhost:5000" > .env
+npm run dev                 # http://localhost:5173
 ```
-## Common Issues
 
-### MongoDB Connection Error
-- Ensure IP is whitelisted in MongoDB Atlas  
-- Verify connection string  
+## Environment variables (Backend)
 
-### CORS Issues
-- Enable CORS in backend  
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `MONGO_URI` | yes | MongoDB connection string |
+| `JWT_SECRET` | yes in production | Signs admin login tokens |
+| `CLIENT_URL` | recommended | Frontend URL(s) for CORS and email links (comma separated) |
+| `GROQ_API_KEY` / `GROQ_MODEL` | optional | AI classification (defaults to `openai/gpt-oss-20b`) |
+| `RESEND_API_KEY` / `EMAIL_FROM` | optional | Email notifications |
 
-### 500 Server Error
-- Check backend logs on Render  
+## API
 
----
-
-## Admin Access
-
-Use the following demo credentials to access the admin dashboard:
-
-- Username : Admin@office.com 
-- Password : 963258
-
-## Author
-
-Radhika Gupta  
-
-GitHub   : https://github.com/Radhikaa45  
-LinkedIn : hhttps://www.linkedin.com/in/radhika-gupta-2671b1326
+| Method | Route | Auth |
+| --- | --- | --- |
+| POST | `/api/complaints/submit` (multipart) | public |
+| GET | `/api/complaints/track/:complaintId` | public |
+| POST | `/api/complaints/feedback/:complaintId` | public |
+| GET | `/api/complaints/public-stats` | public |
+| POST | `/api/ai/analyze` | public |
+| POST | `/api/admin/login` | public |
+| GET | `/api/admin/me`, `/api/admin/stats`, `/api/admin/recent` | admin |
+| GET | `/api/complaints?status=&priority=&category=&search=` | admin |
+| PUT | `/api/complaints/status/:id` `{ status, note?, priority?, category? }` | admin |
+| DELETE | `/api/complaints/:id` | admin |

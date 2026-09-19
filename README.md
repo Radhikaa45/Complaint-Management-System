@@ -1,6 +1,7 @@
 # SmartOffice – Complaint Management System
 
 Submit, track and resolve workplace complaints. React + Vite + Tailwind frontend, Express + MongoDB backend.
+ADMIN ID-admin@test.com   ADMIN PASSWORD-Password123
 
 ## Features
 
